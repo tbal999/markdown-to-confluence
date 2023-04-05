@@ -103,7 +103,7 @@ func (a *APIClient) CreatePage(root int, contents *markdown.FileContents, isroot
 		return 0, fmt.Errorf("createpage error: %w", err)
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.Password))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.ApiKey))
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
@@ -177,7 +177,7 @@ func (a *APIClient) DeletePage(pageID int) error {
 		return fmt.Errorf("deletepage error: %w", err)
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.Password))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.ApiKey))
 
 	req.Header.Set("Content-Type", "application/json")
 
@@ -223,7 +223,7 @@ func (a *APIClient) UpdatePage(pageID int, pageVersion int64, pageContents *mark
 		return false, fmt.Errorf("updatePageContents error: %w", err)
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.Password))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.ApiKey))
 
 	req.Header.Set("Content-Type", "application/json")
 
@@ -257,7 +257,7 @@ func (a *APIClient) createFindPageRequest(title string) (*retryablehttp.Request,
 		return nil, fmt.Errorf("createFindPageRequest error: %w", err)
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.Password))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.ApiKey))
 
 	return req, nil
 }
@@ -272,7 +272,7 @@ func (a *APIClient) createFindPagesRequest(id string) (*retryablehttp.Request, e
 		return nil, fmt.Errorf("createFindPagesRequest error: %w", err)
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.Password))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.ApiKey))
 
 	return req, nil
 }
@@ -406,7 +406,7 @@ func (a *APIClient) UploadAttachment(filename string, id int, isindex bool, inde
 		return fmt.Errorf("file upload error: %w", err)
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.Password))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.ApiKey))
 	req.Header.Set("Accept", "application/json")
 
 	resp, err := a.Client.Do(req)

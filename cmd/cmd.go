@@ -17,10 +17,10 @@ import (
 // setArgs function takes in cmd line arguments
 // and sets common variables (api key / space / username / project path / master page ID / confluenceURL / only docs)
 func setArgs() bool {
-	var argLength = 8
+	var argLength = 7
 
 	if len(os.Args) < argLength-1 {
-		log.Println("usage: app key space username repopath masterpageID confluenceURL onlyDocs")
+		log.Println("usage: apikey space repopath masterpageID confluenceURL onlyDocs")
 		return false
 	}
 
@@ -31,22 +31,21 @@ func setArgs() bool {
 	if len(vars) == argLength-1 {
 		common.ConfluenceAPIKey = vars[0]
 		common.ConfluenceSpace = vars[1]
-		common.ConfluenceUsername = vars[2]
 
-		common.ProjectPathEnv = vars[3]
+		common.ProjectPathEnv = vars[2]
 		common.ProjectPathEnv = strings.ReplaceAll(common.ProjectPathEnv, " ", "-") // replace spaces with -
 
-		common.ProjectMasterID, err = strconv.Atoi(vars[4])
+		common.ProjectMasterID, err = strconv.Atoi(vars[3])
 		if err != nil {
 			log.Println("masterpageID should be an int. If mtc is to be the root enter 0")
 			return false
 		}
 
-		if vars[5] != "" {
-			common.ConfluenceBaseURL = vars[5]
+		if vars[4] != "" {
+			common.ConfluenceBaseURL = vars[4]
 		}
 
-		common.OnlyDocs, err = strconv.ParseBool(vars[6])
+		common.OnlyDocs, err = strconv.ParseBool(vars[5])
 		if err != nil {
 			log.Println("onlyDocs should be a bool")
 			return false
