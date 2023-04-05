@@ -136,7 +136,7 @@ func (node *Node) Start(projectMasterID int, projectPath string, onlyDocs bool) 
 // Tree - print out what has been generated
 func (node *Node) Tree() {
 	for path, id := range t.branches {
-		log.Println(path, "|", common.ConfluenceBaseURL+"/wiki/spaces/"+common.ConfluenceSpace+"/pages/"+id)
+		log.Println(path, "|", common.ConfluenceBaseURL+"/spaces/"+common.ConfluenceSpace+"/pages/"+id)
 	}
 }
 

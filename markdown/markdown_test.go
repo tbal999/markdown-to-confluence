@@ -28,7 +28,7 @@ func TestRelativeURLdetector(t *testing.T) {
 			arg3:     "/absolute/path",
 			filename: "file",
 			//nolint:lll /// test data
-			expectedoutput: `<p><a href="/wiki/spaces//pages/4" data-linked-resource-id="4" data-linked-resource-type="page">a_page</a></p>`,
+			expectedoutput: `<p><a href="/spaces//pages/4" data-linked-resource-id="4" data-linked-resource-type="page">a_page</a></p>`,
 		},
 		{
 			name: "distant markdown link most likely",
@@ -41,7 +41,7 @@ func TestRelativeURLdetector(t *testing.T) {
 			arg3:     "/absolute/path",
 			filename: "file",
 			//nolint:lll /// test data
-			expectedoutput: `<p><a href="/wiki/spaces//pages/2" data-linked-resource-id="2" data-linked-resource-type="page">a_page</a></p>`,
+			expectedoutput: `<p><a href="/spaces//pages/2" data-linked-resource-id="2" data-linked-resource-type="page">a_page</a></p>`,
 		},
 		{
 			name: "relative link in same file",
@@ -55,7 +55,7 @@ func TestRelativeURLdetector(t *testing.T) {
 			arg3:     "/absolute/path",
 			filename: "file.md",
 			//nolint:lll /// test data
-			expectedoutput: `<p><a href="/wiki/spaces//pages/4/file.md+absolute+path#Test" data-linked-resource-id="4" data-linked-resource-type="page">a_page</a></p>`,
+			expectedoutput: `<p><a href="/spaces//pages/4/file.md+absolute+path#Test" data-linked-resource-id="4" data-linked-resource-type="page">a_page</a></p>`,
 		},
 	}
 
@@ -86,7 +86,7 @@ code line c
 }
 
 func TestParseMarkDown(t *testing.T) {
-	link := common.ConfluenceBaseURL + `/wiki/download/attachments//node.png`
+	link := common.ConfluenceBaseURL + `/download/attachments//node.png`
 	testInputs := []struct {
 		Name     string
 		input    []byte

@@ -96,7 +96,7 @@ func (a *APIClient) CreatePage(root int, contents *markdown.FileContents, isroot
 		return 0, fmt.Errorf("createpage error: newPageContentsJSON is nil")
 	}
 
-	URL := fmt.Sprintf("%s/wiki/rest/api/content", a.BaseURL)
+	URL := fmt.Sprintf("%s/rest/api/content", a.BaseURL)
 
 	req, err := retryablehttp.NewRequest(http.MethodPost, URL, newPageContentsJSON)
 	if err != nil {
@@ -170,7 +170,7 @@ func (a *APIClient) updatePageContents(pageVersion int64, contents *markdown.Fil
 
 // DeletePage deletes a confluence page by page ID
 func (a *APIClient) DeletePage(pageID int) error {
-	URL := fmt.Sprintf("%s/wiki/rest/api/content/%d", a.BaseURL, pageID)
+	URL := fmt.Sprintf("%s/rest/api/content/%d", a.BaseURL, pageID)
 
 	req, err := retryablehttp.NewRequest(http.MethodDelete, URL, nil)
 	if err != nil {
@@ -216,7 +216,7 @@ func (a *APIClient) UpdatePage(pageID int, pageVersion int64, pageContents *mark
 		}
 	}
 
-	URL := fmt.Sprintf("%s/wiki/rest/api/content/%d", a.BaseURL, pageID)
+	URL := fmt.Sprintf("%s/rest/api/content/%d", a.BaseURL, pageID)
 
 	req, err := retryablehttp.NewRequest(http.MethodPut, URL, bytes.NewBuffer(newPageContentsJSON))
 	if err != nil {
@@ -249,7 +249,7 @@ func (a *APIClient) UpdatePage(pageID int, pageVersion int64, pageContents *mark
 // createFindPageRequest method takes in a title (page title) and searches for page
 // in confluence
 func (a *APIClient) createFindPageRequest(title string) (*retryablehttp.Request, error) {
-	lookUpURL := fmt.Sprintf("%s/wiki/rest/api/content?expand=body.storage,version&type=page&spaceKey=%s&title=%s",
+	lookUpURL := fmt.Sprintf("%s/rest/api/content?expand=body.storage,version&type=page&spaceKey=%s&title=%s",
 		a.BaseURL, a.Space, title)
 
 	req, err := retryablehttp.NewRequest(http.MethodGet, lookUpURL, nil)
@@ -265,7 +265,7 @@ func (a *APIClient) createFindPageRequest(title string) (*retryablehttp.Request,
 // createFindPagesRequest method takes in a page ID and searches for page
 // in confluence as well as children pages
 func (a *APIClient) createFindPagesRequest(id string) (*retryablehttp.Request, error) {
-	targetURL := fmt.Sprintf(common.ConfluenceBaseURL + "/wiki/rest/api/content/" + id + "/child/page")
+	targetURL := fmt.Sprintf(common.ConfluenceBaseURL + "/rest/api/content/" + id + "/child/page")
 
 	req, err := retryablehttp.NewRequest(http.MethodGet, targetURL, nil)
 	if err != nil {
@@ -396,9 +396,9 @@ func (a *APIClient) UploadAttachment(filename string, id int, isindex bool, inde
 	var targetURL string
 
 	if isindex {
-		targetURL = fmt.Sprintf(common.ConfluenceBaseURL+"/wiki/rest/api/content/%d/child/attachment", indexid)
+		targetURL = fmt.Sprintf(common.ConfluenceBaseURL+"/rest/api/content/%d/child/attachment", indexid)
 	} else {
-		targetURL = fmt.Sprintf(common.ConfluenceBaseURL+"/wiki/rest/api/content/%d/child/attachment", id)
+		targetURL = fmt.Sprintf(common.ConfluenceBaseURL+"/rest/api/content/%d/child/attachment", id)
 	}
 
 	req, err := newfileUploadRequest(targetURL, "file", filename)

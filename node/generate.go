@@ -237,7 +237,7 @@ func (node *Node) generatePlantuml(fpath string) {
 			log.Printf("check confluence page error for path [%s]: %v", abs, err)
 		}
 
-		url := common.ConfluenceBaseURL + "/wiki/spaces/" +
+		url := common.ConfluenceBaseURL + "/spaces/" +
 			common.ConfluenceSpace + "/pages/" + func() string {
 			return strconv.Itoa(node.id)
 		}()

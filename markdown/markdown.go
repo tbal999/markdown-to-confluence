@@ -464,7 +464,7 @@ func generateLineToReturn(updatedURL, link string, splitItem []string, page map[
 
 func generateLink(page map[string]string, updatedURL string, localLink string) string {
 	// to format this in confluence we must follow how confluence formats its content in the web frontend
-	a := `<a href="/wiki/spaces/` + common.ConfluenceSpace + `/pages/` + page[updatedURL] + localLink + `" `
+	a := `<a href="/spaces/` + common.ConfluenceSpace + `/pages/` + page[updatedURL] + localLink + `" `
 
 	b := `data-linked-resource-id="` + page[updatedURL] + `" `
 
@@ -617,10 +617,10 @@ func URLConverter(page map[string]string, item string, isindex bool, abs string)
 			stringToReturn += `<img class="confluence-embedded-image" loading="lazy" `
 
 			//nolint:lll /// set text
-			stringToReturn += `src="` + common.ConfluenceBaseURL + `/wiki/download/attachments/` + page[urlWithoutFile] + `/` + splitURL[len(splitURL)-1] + `" `
+			stringToReturn += `src="` + common.ConfluenceBaseURL + `/download/attachments/` + page[urlWithoutFile] + `/` + splitURL[len(splitURL)-1] + `" `
 
 			//nolint:lll /// set text
-			stringToReturn += `data-image-src="` + common.ConfluenceBaseURL + `/wiki/download/attachments/` + page[urlWithoutFile] + `/` + splitURL[len(splitURL)-1] + `" `
+			stringToReturn += `data-image-src="` + common.ConfluenceBaseURL + `/download/attachments/` + page[urlWithoutFile] + `/` + splitURL[len(splitURL)-1] + `" `
 
 			stringToReturn += `data-linked-resource-id="` + page[urlWithoutFile] + `" `
 
