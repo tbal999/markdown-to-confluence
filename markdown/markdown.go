@@ -16,8 +16,6 @@ import (
 	"github.com/gohugoio/hugo/parser/pageparser"
 	"github.com/xiatechs/markdown-to-confluence/common"
 	m "gitlab.com/golang-commonmark/markdown"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 // GrabAuthors - do we want to collect authors?
@@ -254,15 +252,6 @@ func stripFrontmatterReplaceURL(content string,
 			continue
 		}
 
-		// header lines are converted to ProperCase for confluence local linking
-		htmlHeaders := []string{"<h1>", "<h2>", "<h3>", "<h4>", "<h5>", "<h6>"}
-
-		for _, header := range htmlHeaders {
-			if strings.Contains(lines[index], header) {
-				lines[index] = updateHeaderToProperCase(lines[index])
-			}
-		}
-
 		// correct the local url paths to be absolute paths
 		if strings.Contains(lines[index], "<a href=") && !linkFilterLogic(lines[index]) {
 			lines[index] = relativeURLdetector(lines[index], pages, abs, fileName)
@@ -286,20 +275,17 @@ func stripFrontmatterReplaceURL(content string,
 // updateHeaderToProperCase makes all headers be in Proper Case so local links work
 func updateHeaderToProperCase(line string) string {
 	splitOnLinks := strings.Split(line, `<a href="`)
-	caser := cases.Title(language.English)
 
 	if len(splitOnLinks) == 1 { // means there are no links in the header
-		line = updateHeaderWithNoLinks(line, caser)
+		line = updateHeaderWithNoLinks(line)
 	} else { // means there are links in the header - don't want to alter the links
-		line = updateHeaderWithLinks(splitOnLinks, caser)
+		line = updateHeaderWithLinks(splitOnLinks)
 	}
 
 	return line
 }
 
-func updateHeaderWithNoLinks(line string, caser cases.Caser) string {
-	line = caser.String(line)
-
+func updateHeaderWithNoLinks(line string) string {
 	// this changes the html tags to be capitalized so reverse them back
 	line = updateHTMLHeaders(line)
 
@@ -310,9 +296,8 @@ func updateHeaderWithNoLinks(line string, caser cases.Caser) string {
 	return line
 }
 
-func updateHeaderWithLinks(splitOnLinks []string, caser cases.Caser) string {
+func updateHeaderWithLinks(splitOnLinks []string) string {
 	line := splitOnLinks[0]
-	line = caser.String(line)
 
 	for i := 1; i < len(splitOnLinks); i++ {
 		line += `<a href="` // add the '<a href="' back in
@@ -325,8 +310,7 @@ func updateHeaderWithLinks(splitOnLinks []string, caser cases.Caser) string {
 				line += `>`
 			}
 
-			if ii > 0 { // ProperCase the header and add it to the line
-				extraParts[ii] = caser.String(extraParts[ii])
+			if ii > 0 { // add header to the line
 				line += extraParts[ii]
 			}
 		}
@@ -407,10 +391,6 @@ func relativeURLdetector(item string, page map[string]string, abs, fileName stri
 
 	// create the absolute url
 	updatedURL, localLink := convertRelativeToAbsoluteURL(abs, url)
-
-	// confluence is case sensitive - headers are saved using proper case (i.e. So The Title Is Always Like This)
-	caser := cases.Title(language.English)
-	localLink = caser.String(localLink)
 
 	var link string
 
