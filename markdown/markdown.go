@@ -27,8 +27,16 @@ var (
 // `Metadata` in the format of a `map[string]interface{}` this can contain title, description, slug etc.
 // `Body` a `[]byte` that contains the resulting HTML after parsing the markdown and converting to HTML using Goldmark.
 type FileContents struct {
-	MetaData map[string]interface{}
-	Body     []byte
+	MetaData           map[string]interface{}
+	Body               []byte
+	BodyRepresentation string
+}
+
+func (c FileContents) GetBodyRepresentation() string {
+	if c.BodyRepresentation == "" {
+		return "editor"
+	}
+	return c.BodyRepresentation
 }
 
 // grabtitle function collects the filename of a markdown file

@@ -58,7 +58,7 @@ func (a *APIClient) grabPageContents(contents *markdown.FileContents, root int, 
 		Space: SpaceObj{Key: a.Space},
 		Body: BodyObj{Storage: StorageObj{
 			Value:          string(contents.Body),
-			Representation: "editor",
+			Representation: contents.GetBodyRepresentation(),
 		}},
 	}
 
@@ -155,7 +155,7 @@ func (a *APIClient) updatePageContents(pageVersion int64, contents *markdown.Fil
 		Body: BodyObj{
 			Storage: StorageObj{
 				Value:          string(contents.Body),
-				Representation: "editor",
+				Representation: contents.GetBodyRepresentation(),
 			},
 		},
 	}
