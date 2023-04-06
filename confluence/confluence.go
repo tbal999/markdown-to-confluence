@@ -231,6 +231,13 @@ func (a *APIClient) UpdatePage(pageID int, pageVersion int64, pageContents *mark
 	if err != nil {
 		return false, fmt.Errorf("updatepage failed to do the request: %w", err)
 	}
+	if resp.StatusCode != http.StatusOK {
+		bytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return false, fmt.Errorf("updatepage failed to do the request and subsequently failed to read the response body: status=%d, error=%w", resp.StatusCode, err)
+		}
+		return false, fmt.Errorf("updatepage failed to do the request: status=%d, response=%s", resp.StatusCode, string(bytes))
+	}
 
 	defer func() {
 		err := resp.Body.Close()
@@ -238,10 +245,6 @@ func (a *APIClient) UpdatePage(pageID int, pageVersion int64, pageContents *mark
 			log.Println(fmt.Errorf("body close error: %w", err))
 		}
 	}()
-
-	if err != nil {
-		log.Println("updatepage error was: ", resp.Status, err)
-	}
 
 	return true, nil
 }
