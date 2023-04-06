@@ -8,10 +8,6 @@ inputs:
     description: 'the confluence space'
     required: true
     default: ''
-  username:
-    description: 'the username'
-    required: true
-    default: ''
   repo:
     description: 'the repository foldername'
     required: true
@@ -34,7 +30,6 @@ runs:
   args:
     - ${{ inputs.key }} 
     - ${{ inputs.space }} 
-    - ${{ inputs.username }} 
     - ${{ inputs.repo }} 
     - ${{ inputs.parentID }} 
     - ${{ inputs.url }}
