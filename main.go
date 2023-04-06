@@ -3,8 +3,9 @@ package main
 
 import (
 	"github.com/xiatechs/markdown-to-confluence/cmd"
+	"os"
 )
 
 func main() {
-	cmd.Start()
+	os.Exit(cmd.Start())
 }

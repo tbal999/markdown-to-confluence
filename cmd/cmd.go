@@ -59,7 +59,8 @@ func setArgs() bool {
 // and begins the process of creating confluence pages via calling
 // the node.Start method
 // if node.Start returns true, then calls node.Delete method
-func Start() {
+// returns the exit code for the program
+func Start() int {
 	markdown.GrabAuthors = false
 
 	if setArgs() {
@@ -68,13 +69,16 @@ func Start() {
 		client, err := confluence.CreateAPIClient()
 		if err != nil {
 			log.Println(err)
-			return
+			return 1
 		}
 
 		node.SetAPIClient(client)
 
 		if root.Start(common.ProjectMasterID, common.ProjectPathEnv, common.OnlyDocs) {
 			root.Delete()
+			return 0
 		}
 	}
+
+	return 1
 }
