@@ -77,13 +77,25 @@ func (node *Node) checkIfMarkDown(fpath string, checking bool) bool {
 	return false
 }
 
+// checkForProcessableFiles method checks to see if the file is an markdown or swagger.json file
+func hasValidSuffix(name string, validSuffixes []string) bool {
+	for index := range validSuffixes {
+		if strings.HasSuffix(strings.ToLower(name), validSuffixes[index]) {
+			return true
+		}
+	}
+
+	return false
+}
+
 // checkIfProcessableFile method checks whether file is a file we can process or not
 // checking bool is for whether we are just checking returning bool, or
 // if we are doing work on file
 func (node *Node) checkIfProcessableFile(checking bool, name string) bool {
 	fileName := filepath.Base(name)
+	validSuffixes := []string{".md", ".swagger.json"}
 
-	if strings.HasSuffix(strings.ToLower(fileName), ".md") {
+	if hasValidSuffix(name, validSuffixes) {
 		if !checking {
 			if strings.ToLower(fileName) == indexName { // we don't want to process index.md here
 				return true
