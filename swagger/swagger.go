@@ -160,7 +160,7 @@ func ParseSwagger(rootID int, content []byte, isIndex bool,
 
 	if GrabAuthors {
 		f.Body = append(f.Body, []byte(capGit(path))...)
-		f.BodyRepresentation = "storage"
+		f.BodyRepresentation = "raw"
 	}
 
 	return f, nil
