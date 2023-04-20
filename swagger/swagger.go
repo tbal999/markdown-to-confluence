@@ -150,7 +150,7 @@ func ParseSwagger(rootID int, content []byte, isIndex bool,
 		return nil, fmt.Errorf("swagger page parsing error - page title is empty")
 	}
 
-	macroStart := `<ac:structured-macro ac:name="open-api" ac:schema-version="1" ac:macro-id="9819e58b-6a9a-4bd7-9503-385df5460d27"><ac:plain-text-body><![CDATA[`
+	macroStart := `<ac:structured-macro ac:name="open-api" ac:schema-version="1"><ac:plain-text-body><![CDATA[`
 
 	macroEnd := `]]></ac:plain-text-body></ac:structured-macro>`
 
