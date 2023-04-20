@@ -136,7 +136,7 @@ func (node *Node) checkIfFolder(fpath string) bool {
 func (node *Node) checkOtherFileTypes(fpath string, checking bool) bool {
 	if !node.checkIfFolder(fpath) {
 		node.checkIfGoFile(fpath)
-		return node.checkForImages(fpath, checking) || node.checkForSwaggerFiles(fpath, checking)
+		return node.checkForImages(fpath, checking)
 	}
 
 	return false
@@ -158,25 +158,6 @@ func (node *Node) checkIfGoFile(name string) {
 // checkForImages method checks to see if the file is an image file
 func (node *Node) checkForImages(name string, checking bool) bool {
 	validFiles := []string{".png", ".jpg", ".jpeg", ".gif"}
-
-	for index := range validFiles {
-		if strings.HasSuffix(strings.ToLower(name), validFiles[index]) {
-			if checking {
-				node.alive = true
-			} else {
-				node.checkNodeRootIsNil(name)
-			}
-
-			return true
-		}
-	}
-
-	return false
-}
-
-// checkForSwaggerFiles method checks to see if the file is an swagger json file
-func (node *Node) checkForSwaggerFiles(name string, checking bool) bool {
-	validFiles := []string{".swagger.json"}
 
 	for index := range validFiles {
 		if strings.HasSuffix(strings.ToLower(name), validFiles[index]) {
