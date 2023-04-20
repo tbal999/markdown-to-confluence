@@ -157,10 +157,10 @@ func ParseSwagger(rootID int, content []byte, isIndex bool,
 	bodyString := macroStart + string(content) + macroEnd
 
 	f.Body = []byte(bodyString)
+	f.BodyRepresentation = "storage"
 
 	if GrabAuthors {
 		f.Body = append(f.Body, []byte(capGit(path))...)
-		f.BodyRepresentation = "raw"
 	}
 
 	return f, nil
