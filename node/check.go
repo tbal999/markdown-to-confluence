@@ -65,7 +65,7 @@ func (node *Node) fileInDirectoryCheck(fpath string, checking, folders bool) boo
 // passes file to checkIfMarkDownFile method
 func (node *Node) checkIfMarkDown(fpath string, checking bool) bool {
 	if !isFolder(fpath) {
-		if ok := node.checkIfMarkDownFile(checking, fpath); ok {
+		if ok := node.checkIfProcessableFile(checking, fpath); ok {
 			if checking {
 				node.alive = true
 			}
@@ -77,10 +77,10 @@ func (node *Node) checkIfMarkDown(fpath string, checking bool) bool {
 	return false
 }
 
-// checkIfMarkDownFile method checks whether file is a markdown file or not
+// checkIfProcessableFile method checks whether file is a file we can process or not
 // checking bool is for whether we are just checking returning bool, or
 // if we are doing work on file
-func (node *Node) checkIfMarkDownFile(checking bool, name string) bool {
+func (node *Node) checkIfProcessableFile(checking bool, name string) bool {
 	fileName := filepath.Base(name)
 
 	if strings.HasSuffix(strings.ToLower(fileName), ".md") {
@@ -89,7 +89,7 @@ func (node *Node) checkIfMarkDownFile(checking bool, name string) bool {
 				return true
 			}
 
-			err := node.processMarkDown(name, fileName)
+			err := node.processFilesDown(name, fileName)
 			if err != nil {
 				log.Println(err)
 			}
@@ -124,7 +124,7 @@ func (node *Node) checkIfFolder(fpath string) bool {
 func (node *Node) checkOtherFileTypes(fpath string, checking bool) bool {
 	if !node.checkIfFolder(fpath) {
 		node.checkIfGoFile(fpath)
-		return node.checkForImages(fpath, checking)
+		return node.checkForImages(fpath, checking) || node.checkForSwaggerFiles(fpath, checking)
 	}
 
 	return false
@@ -146,6 +146,25 @@ func (node *Node) checkIfGoFile(name string) {
 // checkForImages method checks to see if the file is an image file
 func (node *Node) checkForImages(name string, checking bool) bool {
 	validFiles := []string{".png", ".jpg", ".jpeg", ".gif"}
+
+	for index := range validFiles {
+		if strings.HasSuffix(strings.ToLower(name), validFiles[index]) {
+			if checking {
+				node.alive = true
+			} else {
+				node.checkNodeRootIsNil(name)
+			}
+
+			return true
+		}
+	}
+
+	return false
+}
+
+// checkForSwaggerFiles method checks to see if the file is an swagger json file
+func (node *Node) checkForSwaggerFiles(name string, checking bool) bool {
+	validFiles := []string{".swagger.json"}
 
 	for index := range validFiles {
 		if strings.HasSuffix(strings.ToLower(name), validFiles[index]) {

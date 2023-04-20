@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/xiatechs/markdown-to-confluence/markdown"
+	"github.com/xiatechs/markdown-to-confluence/swagger"
 	"github.com/xiatechs/markdown-to-confluence/todo"
 )
 
@@ -69,10 +70,10 @@ func (node *Node) processMarkDownIndex(path string) (*markdown.FileContents, err
 	return parsedContents, nil
 }
 
-// processMarkDown method takes in file contents
+// processFilesDown method takes in file contents
 // and parses the markdown file before calling
 // checkConfluencePages method
-func (node *Node) processMarkDown(path, fileName string) error {
+func (node *Node) processFilesDown(path, fileName string) error {
 	_, abs := node.generateTitles()
 
 	contents, err := os.ReadFile(filepath.Clean(path))
@@ -83,17 +84,30 @@ func (node *Node) processMarkDown(path, fileName string) error {
 
 	mapSem <- struct{}{}
 
-	parsedContents, err := markdown.ParseMarkdown(func() int {
-		if node.root == nil {
-			return 0
-		}
+	var parsedContents *markdown.FileContents
+	if strings.HasSuffix(fileName, ".md") {
+		parsedContents, err = markdown.ParseMarkdown(func() int {
+			if node.root == nil {
+				return 0
+			}
 
-		return node.root.id
-	}(), contents, node.indexPage,
-		node.treeLink.branches, node.path, abs, fileName)
+			return node.root.id
+		}(), contents, node.indexPage,
+			node.treeLink.branches, node.path, abs, fileName)
+	} else if strings.HasSuffix(fileName, ".swagger.json") {
+		parsedContents, err = swagger.ParseSwagger(func() int {
+			if node.root == nil {
+				return 0
+			}
+
+			return node.root.id
+		}(), contents, node.indexPage,
+			node.treeLink.branches, node.path, abs, fileName)
+	}
+
 	if err != nil {
 		<-mapSem
-		return fmt.Errorf("absolute path [%s] - file [%s] - parse markdown error: %w",
+		return fmt.Errorf("absolute path [%s] - file [%s] - parse file error: %w",
 			abs, path, err)
 	}
 
