@@ -77,7 +77,7 @@ func (node *Node) checkIfMarkDown(fpath string, checking bool) bool {
 	return false
 }
 
-// checkForProcessableFiles method checks to see if the file is an markdown or swagger.json file
+// hasValidSuffix method checks if file has one of the valid suffixes provided
 func hasValidSuffix(name string, validSuffixes []string) bool {
 	for index := range validSuffixes {
 		if strings.HasSuffix(strings.ToLower(name), validSuffixes[index]) {
