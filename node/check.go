@@ -65,7 +65,7 @@ func (node *Node) fileInDirectoryCheck(fpath string, checking, folders bool) boo
 // passes file to checkIfMarkDownFile method
 func (node *Node) checkIfMarkDown(fpath string, checking bool) bool {
 	if !isFolder(fpath) {
-		if ok := node.checkIfMarkDownFile(checking, fpath); ok {
+		if ok := node.checkIfProcessableFile(checking, fpath); ok {
 			if checking {
 				node.alive = true
 			}
@@ -77,19 +77,31 @@ func (node *Node) checkIfMarkDown(fpath string, checking bool) bool {
 	return false
 }
 
-// checkIfMarkDownFile method checks whether file is a markdown file or not
+// hasValidSuffix method checks if file has one of the valid suffixes provided
+func hasValidSuffix(name string, validSuffixes []string) bool {
+	for index := range validSuffixes {
+		if strings.HasSuffix(strings.ToLower(name), validSuffixes[index]) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// checkIfProcessableFile method checks whether file is a file we can process or not
 // checking bool is for whether we are just checking returning bool, or
 // if we are doing work on file
-func (node *Node) checkIfMarkDownFile(checking bool, name string) bool {
+func (node *Node) checkIfProcessableFile(checking bool, name string) bool {
 	fileName := filepath.Base(name)
+	validSuffixes := []string{".md", ".swagger.json"}
 
-	if strings.HasSuffix(strings.ToLower(fileName), ".md") {
+	if hasValidSuffix(name, validSuffixes) {
 		if !checking {
 			if strings.ToLower(fileName) == indexName { // we don't want to process index.md here
 				return true
 			}
 
-			err := node.processMarkDown(name, fileName)
+			err := node.processFilesDown(name, fileName)
 			if err != nil {
 				log.Println(err)
 			}
