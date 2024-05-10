@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"mime/multipart"
 	"net/http"
@@ -26,7 +25,7 @@ import (
 func newPageResults(resp *http.Response) (*PageResults, error) {
 	pageResultVar := PageResults{}
 
-	contents, err := ioutil.ReadAll(resp.Body)
+	contents, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("newPageResults decode error: %w", err)
 	}
@@ -59,7 +58,7 @@ func (a *APIClient) grabPageContents(contents *markdown.FileContents, root int, 
 		Space: SpaceObj{Key: a.Space},
 		Body: BodyObj{Storage: StorageObj{
 			Value:          string(contents.Body),
-			Representation: "storage",
+			Representation: contents.GetBodyRepresentation(),
 		}},
 	}
 
@@ -77,7 +76,7 @@ func (a *APIClient) grabPageContents(contents *markdown.FileContents, root int, 
 
 // CreatePage method takes root (root page id) and page contents and bool (is page root?)
 // and generates a page in confluence and returns the generated page ID
-//nolint: gocyclo // 11 is just about fine
+// nolint: gocyclo // 11 is just about fine
 func (a *APIClient) CreatePage(root int, contents *markdown.FileContents, isroot bool) (int, error) {
 	if contents == nil {
 		return 0, fmt.Errorf("createpage error: contents parameter is nil")
@@ -97,14 +96,14 @@ func (a *APIClient) CreatePage(root int, contents *markdown.FileContents, isroot
 		return 0, fmt.Errorf("createpage error: newPageContentsJSON is nil")
 	}
 
-	URL := fmt.Sprintf("%s/wiki/rest/api/content", a.BaseURL)
+	URL := fmt.Sprintf("%s/rest/api/content", a.BaseURL)
 
 	req, err := retryablehttp.NewRequest(http.MethodPost, URL, newPageContentsJSON)
 	if err != nil {
 		return 0, fmt.Errorf("createpage error: %w", err)
 	}
 
-	req.SetBasicAuth(a.Username, a.Password)
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.ApiKey))
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
@@ -122,7 +121,11 @@ func (a *APIClient) CreatePage(root int, contents *markdown.FileContents, isroot
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		return 0, fmt.Errorf("failed to create confluence page: %s", resp.Status)
+		bytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return 0, fmt.Errorf("failed to create confluence page: status=%d, error=%w", resp.StatusCode, err)
+		}
+		return 0, fmt.Errorf("failed to create confluence page: status=%d, response=%s", resp.StatusCode, string(bytes))
 	}
 
 	decoder := json.NewDecoder(resp.Body)
@@ -156,7 +159,7 @@ func (a *APIClient) updatePageContents(pageVersion int64, contents *markdown.Fil
 		Body: BodyObj{
 			Storage: StorageObj{
 				Value:          string(contents.Body),
-				Representation: "storage",
+				Representation: contents.GetBodyRepresentation(),
 			},
 		},
 	}
@@ -171,14 +174,14 @@ func (a *APIClient) updatePageContents(pageVersion int64, contents *markdown.Fil
 
 // DeletePage deletes a confluence page by page ID
 func (a *APIClient) DeletePage(pageID int) error {
-	URL := fmt.Sprintf("%s/wiki/rest/api/content/%d", a.BaseURL, pageID)
+	URL := fmt.Sprintf("%s/rest/api/content/%d", a.BaseURL, pageID)
 
 	req, err := retryablehttp.NewRequest(http.MethodDelete, URL, nil)
 	if err != nil {
 		return fmt.Errorf("deletepage error: %w", err)
 	}
 
-	req.SetBasicAuth(a.Username, a.Password)
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.ApiKey))
 
 	req.Header.Set("Content-Type", "application/json")
 
@@ -217,20 +220,27 @@ func (a *APIClient) UpdatePage(pageID int, pageVersion int64, pageContents *mark
 		}
 	}
 
-	URL := fmt.Sprintf("%s/wiki/rest/api/content/%d", a.BaseURL, pageID)
+	URL := fmt.Sprintf("%s/rest/api/content/%d", a.BaseURL, pageID)
 
 	req, err := retryablehttp.NewRequest(http.MethodPut, URL, bytes.NewBuffer(newPageContentsJSON))
 	if err != nil {
 		return false, fmt.Errorf("updatePageContents error: %w", err)
 	}
 
-	req.SetBasicAuth(a.Username, a.Password)
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.ApiKey))
 
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := a.Client.Do(req)
 	if err != nil {
 		return false, fmt.Errorf("updatepage failed to do the request: %w", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		bytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return false, fmt.Errorf("updatepage failed to do the request and subsequently failed to read the response body: status=%d, error=%w", resp.StatusCode, err)
+		}
+		return false, fmt.Errorf("updatepage failed to do the request: status=%d, response=%s", resp.StatusCode, string(bytes))
 	}
 
 	defer func() {
@@ -240,17 +250,13 @@ func (a *APIClient) UpdatePage(pageID int, pageVersion int64, pageContents *mark
 		}
 	}()
 
-	if err != nil {
-		log.Println("updatepage error was: ", resp.Status, err)
-	}
-
 	return true, nil
 }
 
 // createFindPageRequest method takes in a title (page title) and searches for page
 // in confluence
 func (a *APIClient) createFindPageRequest(title string) (*retryablehttp.Request, error) {
-	lookUpURL := fmt.Sprintf("%s/wiki/rest/api/content?expand=body.storage,version&type=page&spaceKey=%s&title=%s",
+	lookUpURL := fmt.Sprintf("%s/rest/api/content?expand=body.storage,version&type=page&spaceKey=%s&title=%s",
 		a.BaseURL, a.Space, title)
 
 	req, err := retryablehttp.NewRequest(http.MethodGet, lookUpURL, nil)
@@ -258,7 +264,7 @@ func (a *APIClient) createFindPageRequest(title string) (*retryablehttp.Request,
 		return nil, fmt.Errorf("createFindPageRequest error: %w", err)
 	}
 
-	req.SetBasicAuth(a.Username, a.Password)
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.ApiKey))
 
 	return req, nil
 }
@@ -266,14 +272,14 @@ func (a *APIClient) createFindPageRequest(title string) (*retryablehttp.Request,
 // createFindPagesRequest method takes in a page ID and searches for page
 // in confluence as well as children pages
 func (a *APIClient) createFindPagesRequest(id string) (*retryablehttp.Request, error) {
-	targetURL := fmt.Sprintf(common.ConfluenceBaseURL + "/wiki/rest/api/content/" + id + "/child/page")
+	targetURL := fmt.Sprintf(common.ConfluenceBaseURL + "/rest/api/content/" + id + "/child/page")
 
 	req, err := retryablehttp.NewRequest(http.MethodGet, targetURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("createFindPagesRequest error: %w", err)
 	}
 
-	req.SetBasicAuth(a.Username, a.Password)
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.ApiKey))
 
 	return req, nil
 }
@@ -397,9 +403,9 @@ func (a *APIClient) UploadAttachment(filename string, id int, isindex bool, inde
 	var targetURL string
 
 	if isindex {
-		targetURL = fmt.Sprintf(common.ConfluenceBaseURL+"/wiki/rest/api/content/%d/child/attachment", indexid)
+		targetURL = fmt.Sprintf(common.ConfluenceBaseURL+"/rest/api/content/%d/child/attachment", indexid)
 	} else {
-		targetURL = fmt.Sprintf(common.ConfluenceBaseURL+"/wiki/rest/api/content/%d/child/attachment", id)
+		targetURL = fmt.Sprintf(common.ConfluenceBaseURL+"/rest/api/content/%d/child/attachment", id)
 	}
 
 	req, err := newfileUploadRequest(targetURL, "file", filename)
@@ -407,7 +413,7 @@ func (a *APIClient) UploadAttachment(filename string, id int, isindex bool, inde
 		return fmt.Errorf("file upload error: %w", err)
 	}
 
-	req.SetBasicAuth(a.Username, a.Password)
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.ApiKey))
 	req.Header.Set("Accept", "application/json")
 
 	resp, err := a.Client.Do(req)

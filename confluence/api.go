@@ -12,11 +12,10 @@ import (
 
 // APIClient struct for interacting with confluence
 type APIClient struct {
-	BaseURL  string
-	Space    string
-	Username string
-	Password string
-	Client   HTTPClient
+	BaseURL string
+	Space   string
+	ApiKey  string
+	Client  HTTPClient
 }
 
 // HTTPClient interface will allow mock Do request
@@ -27,8 +26,7 @@ type HTTPClient interface {
 // CreateAPIClient creates the API client with relevant login details for confluence's API
 func CreateAPIClient() (*APIClient, error) {
 	apiClient := APIClientWithAuths(retryablehttp.NewClient())
-	if apiClient.Password == "" ||
-		apiClient.Username == "" ||
+	if apiClient.ApiKey == "" ||
 		apiClient.Space == "" {
 		return nil, fmt.Errorf("%s", "one or more arguments are not set - please ensure they are before running this action")
 	}
@@ -39,10 +37,9 @@ func CreateAPIClient() (*APIClient, error) {
 // APIClientWithAuths returns an APIClient with dependencies defaulted to sane values
 func APIClientWithAuths(httpClient HTTPClient) *APIClient {
 	return &APIClient{
-		BaseURL:  common.ConfluenceBaseURL,
-		Space:    common.ConfluenceSpace,
-		Username: common.ConfluenceUsername,
-		Password: common.ConfluenceAPIKey,
-		Client:   httpClient,
+		BaseURL: common.ConfluenceBaseURL,
+		Space:   common.ConfluenceSpace,
+		ApiKey:  common.ConfluenceAPIKey,
+		Client:  httpClient,
 	}
 }

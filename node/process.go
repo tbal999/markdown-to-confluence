@@ -4,12 +4,13 @@ package node
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/xiatechs/markdown-to-confluence/markdown"
+	"github.com/xiatechs/markdown-to-confluence/swagger"
 	"github.com/xiatechs/markdown-to-confluence/todo"
 )
 
@@ -19,13 +20,13 @@ import (
 func (node *Node) processGoFile(fpath string) error {
 	_, abs := node.generateTitles()
 
-	contents, err := ioutil.ReadFile(filepath.Clean(fpath))
+	contents, err := os.ReadFile(filepath.Clean(fpath))
 	if err != nil {
 		return fmt.Errorf("absolute path [%s] - file [%s] - read file error: %w",
 			abs, fpath, err)
 	}
 
-	fullpath := strings.Replace(fpath, ".", "", 2)
+	fullpath := strings.Replace(fpath, ".", "", 2) //nolint:gomnd // only want to replace max of first 2
 
 	fullpath = strings.TrimPrefix(fullpath, "/")
 
@@ -36,10 +37,10 @@ func (node *Node) processGoFile(fpath string) error {
 
 // processMarkDownIndex method takes in index file contents
 // and parses the markdown file
-func (node *Node) processMarkDownIndex(path string, subindex int) (*markdown.FileContents, error) {
-	fpath, abs := node.generateTitles()
+func (node *Node) processMarkDownIndex(path string) (*markdown.FileContents, error) {
+	_, abs := node.generateTitles()
 
-	contents, err := ioutil.ReadFile(filepath.Clean(path))
+	contents, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return nil, fmt.Errorf("absolute path [%s] - file [%s] - read file error: %w",
 			abs, path, err)
@@ -54,7 +55,7 @@ func (node *Node) processMarkDownIndex(path string, subindex int) (*markdown.Fil
 
 		return node.root.id
 	}(), contents, node.indexPage,
-		subindex, node.treeLink.branches, node.path)
+		node.treeLink.branches, node.path, abs, node.indexName)
 	if err != nil {
 		<-mapSem
 
@@ -64,18 +65,18 @@ func (node *Node) processMarkDownIndex(path string, subindex int) (*markdown.Fil
 
 	<-mapSem
 
-	parsedContents.MetaData["title"] = fpath
+	parsedContents.MetaData["title"] = parsedContents.MetaData["title"].(string) + " (" + abs + ")"
 
 	return parsedContents, nil
 }
 
-// processMarkDown method takes in file contents
+// processFilesDown method takes in file contents
 // and parses the markdown file before calling
 // checkConfluencePages method
-func (node *Node) processMarkDown(path string) error {
-	fpath, abs := node.generateTitles()
+func (node *Node) processFilesDown(path, fileName string) error {
+	_, abs := node.generateTitles()
 
-	contents, err := ioutil.ReadFile(filepath.Clean(path))
+	contents, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return fmt.Errorf("absolute path [%s] - file [%s] - read file error: %w",
 			abs, path, err)
@@ -83,23 +84,36 @@ func (node *Node) processMarkDown(path string) error {
 
 	mapSem <- struct{}{}
 
-	parsedContents, err := markdown.ParseMarkdown(func() int {
-		if node.root == nil {
-			return 0
-		}
+	var parsedContents *markdown.FileContents
+	if strings.HasSuffix(fileName, ".md") {
+		parsedContents, err = markdown.ParseMarkdown(func() int {
+			if node.root == nil {
+				return 0
+			}
 
-		return node.root.id
-	}(), contents, node.indexPage, node.id,
-		node.treeLink.branches, node.path)
+			return node.root.id
+		}(), contents, node.indexPage,
+			node.treeLink.branches, node.path, abs, fileName)
+	} else if strings.HasSuffix(fileName, ".swagger.json") {
+		parsedContents, err = swagger.ParseSwagger(func() int {
+			if node.root == nil {
+				return 0
+			}
+
+			return node.root.id
+		}(), contents, node.indexPage,
+			node.treeLink.branches, node.path, abs, fileName)
+	}
+
 	if err != nil {
 		<-mapSem
-		return fmt.Errorf("absolute path [%s] - file [%s] - parse markdown error: %w",
+		return fmt.Errorf("absolute path [%s] - file [%s] - parse file error: %w",
 			abs, path, err)
 	}
 
 	<-mapSem
 
-	parsedContents.MetaData["title"] = parsedContents.MetaData["title"].(string) + "-" + fpath
+	parsedContents.MetaData["title"] = parsedContents.MetaData["title"].(string) + " (" + abs + ")"
 
 	err = node.checkConfluencePages(parsedContents, path)
 	if err != nil {
